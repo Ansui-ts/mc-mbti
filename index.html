@@ -1202,10 +1202,12 @@ function rand(a){ return a[Math.floor(Math.random() * a.length)]; }
 })();
 
 /* ---- 测试状态 ---- */
-let idx = 0, ans = [], score = { f:0,h:0,t:0,s:0,z:0,y:0,d:0,q:0 }, orders = [], lastKey = null;
+let idx = 0, ans = [], selIdx = [], advT = null,
+    score = { f:0,h:0,t:0,s:0,z:0,y:0,d:0,q:0 }, orders = [], lastKey = null;
 
 function startQuiz(){
-  idx = 0; ans = [];
+  if (advT) { clearTimeout(advT); advT = null; }
+  idx = 0; ans = []; selIdx = [];
   score = { f:0,h:0,t:0,s:0,z:0,y:0,d:0,q:0 };
   orders = QUIZ.map(function(){ return [0,1,2].sort(function(){ return Math.random() - .5; }); });
   show('quiz');
@@ -1222,18 +1224,21 @@ function renderQ(){
   orders[idx].forEach(function(oi){
     const o = q.o[oi];
     const b = document.createElement('button');
-    b.className = 'opt' + (ans[idx] === o[1] ? ' sel' : '');
+    b.className = 'opt' + (selIdx[idx] === oi ? ' sel' : '');
     b.textContent = o[0];
-    b.onclick = function(){ pick(o[1]); };
+    b.onclick = function(){ pick(oi, o[1]); };
     box.appendChild(b);
   });
 }
-function pick(pole){
+function pick(oi, pole){
   if (ans[idx]) score[ans[idx]]--;
   ans[idx] = pole;
+  selIdx[idx] = oi;
   score[pole]++;
   renderQ();
-  setTimeout(function(){
+  if (advT) clearTimeout(advT);
+  advT = setTimeout(function(){
+    advT = null;
     if (idx < QUIZ.length - 1) { idx++; renderQ(); }
     else finish();
   }, 190);
